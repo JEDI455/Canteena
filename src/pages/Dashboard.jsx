@@ -92,60 +92,88 @@ export default function Dashboard() {
 
       {loading ? (
         <div style={{ marginTop: '2rem' }}>Loading markets...</div>
+      ) : matches.length === 0 ? (
+        <div style={{ padding: '3rem', textAlign: 'center', border: '1px dashed var(--border-light)', borderRadius: 'var(--radius-md)' }}>
+          <h3>No active markets</h3>
+          <p className="text-muted">Wait for an admin to create new matches.</p>
+        </div>
       ) : (
-        <div className="market-grid">
-          {matches.map(m => {
-            const isExpired = m.status === 'open' && new Date(m.end_date) < new Date();
-            let icon = '🎲';
-            if (m.category === 'politics') icon = '🏛️';
-            if (m.category === 'economics') icon = '📈';
-            if (m.category === 'sport') icon = '⚽';
-
+        <div>
+          {Object.entries(
+            matches.reduce((acc, m) => {
+              const cat = m.category || 'other';
+              if (!acc[cat]) acc[cat] = [];
+              acc[cat].push(m);
+              return acc;
+            }, {})
+          ).sort(([catA], [catB]) => catA.localeCompare(catB)).map(([category, categoryMatches]) => {
+            const catIcon = category === 'politics' ? '🏛️' : category === 'economics' ? '📈' : category === 'sport' ? '⚽' : '🎲';
+            
             return (
-            <div className="market-card" key={m.id} style={{ opacity: isExpired ? 0.7 : 1 }}>
-              <div className="market-header" style={{ justifyContent: 'space-between' }}>
-                <div className="market-icon">{icon}</div>
-                {m.end_date && (
-                  <div style={{ fontSize: '0.75rem', color: isExpired ? 'var(--accent-no)' : 'var(--text-muted)' }}>
-                     {isExpired ? 'Market Closed' : `Ends: ${new Date(m.end_date).toLocaleDateString()}`}
-                  </div>
-                )}
-              </div>
+              <div key={category} style={{ marginBottom: '3.5rem' }}>
+                <h2 style={{ 
+                  fontSize: '1.6rem', 
+                  marginBottom: '1.5rem', 
+                  textTransform: 'capitalize', 
+                  color: 'var(--text-main)', 
+                  borderBottom: '1px solid var(--border-light)', 
+                  paddingBottom: '0.5rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.75rem'
+                }}>
+                  <span>{catIcon}</span>
+                  {category === 'sport' ? 'Sports' : category} 
+                  <span style={{ fontSize: '1rem', color: 'var(--text-muted)', fontWeight: 400, marginLeft: '0.5rem' }}>
+                    ({categoryMatches.length})
+                  </span>
+                </h2>
+                <div className="market-grid">
+                  {categoryMatches.map(m => {
+                    const isExpired = m.status === 'open' && new Date(m.end_date) < new Date();
 
-              <div className="market-title">
-                <div style={{ fontSize: '1.15rem', color: 'var(--text-main)', marginBottom: '0.4rem' }}>{m.title}</div>
-                <div className="text-muted" style={{ fontWeight: 400, fontSize: '0.9rem' }}>{m.team_a} vs {m.team_b}</div>
-              </div>
+                    return (
+                    <div className="market-card" key={m.id} style={{ opacity: isExpired ? 0.7 : 1 }}>
+                      <div className="market-header" style={{ justifyContent: 'space-between' }}>
+                        <div className="market-icon">{catIcon}</div>
+                        {m.end_date && (
+                          <div style={{ fontSize: '0.75rem', color: isExpired ? 'var(--accent-no)' : 'var(--text-muted)' }}>
+                             {isExpired ? 'Market Closed' : `Ends: ${new Date(m.end_date).toLocaleDateString()}`}
+                          </div>
+                        )}
+                      </div>
 
-              <div className="flex gap-2" style={{ marginTop: 'auto' }}>
-                <button 
-                  className="btn btn-yes flex-col" 
-                  style={{ gap: '0.25rem', paddingTop: '0.75rem', paddingBottom: '0.75rem' }}
-                  onClick={() => openBetModal(m.id, 'team_a', m.team_a, m.team_a_odds_percent)}
-                  disabled={isExpired}
-                >
-                  <span style={{ fontSize: '0.8rem', opacity: 0.9 }}>{m.team_a}</span>
-                  <span style={{ fontSize: '1.1rem', fontWeight: 700 }}>{m.team_a_odds_percent}%</span>
-                </button>
-                <button 
-                  className="btn btn-no flex-col" 
-                  style={{ gap: '0.25rem', paddingTop: '0.75rem', paddingBottom: '0.75rem' }}
-                  onClick={() => openBetModal(m.id, 'team_b', m.team_b, m.team_b_odds_percent)}
-                  disabled={isExpired}
-                >
-                  <span style={{ fontSize: '0.8rem', opacity: 0.9 }}>{m.team_b}</span>
-                  <span style={{ fontSize: '1.1rem', fontWeight: 700 }}>{m.team_b_odds_percent}%</span>
-                </button>
+                      <div className="market-title">
+                        <div style={{ fontSize: '1.15rem', color: 'var(--text-main)', marginBottom: '0.4rem' }}>{m.title}</div>
+                        <div className="text-muted" style={{ fontWeight: 400, fontSize: '0.9rem' }}>{m.team_a} vs {m.team_b}</div>
+                      </div>
+
+                      <div className="flex gap-2" style={{ marginTop: 'auto' }}>
+                        <button 
+                          className="btn btn-yes flex-col" 
+                          style={{ gap: '0.25rem', paddingTop: '0.75rem', paddingBottom: '0.75rem' }}
+                          onClick={() => openBetModal(m.id, 'team_a', m.team_a, m.team_a_odds_percent)}
+                          disabled={isExpired}
+                        >
+                          <span style={{ fontSize: '0.8rem', opacity: 0.9 }}>{m.team_a}</span>
+                          <span style={{ fontSize: '1.1rem', fontWeight: 700 }}>{m.team_a_odds_percent}%</span>
+                        </button>
+                        <button 
+                          className="btn btn-no flex-col" 
+                          style={{ gap: '0.25rem', paddingTop: '0.75rem', paddingBottom: '0.75rem' }}
+                          onClick={() => openBetModal(m.id, 'team_b', m.team_b, m.team_b_odds_percent)}
+                          disabled={isExpired}
+                        >
+                          <span style={{ fontSize: '0.8rem', opacity: 0.9 }}>{m.team_b}</span>
+                          <span style={{ fontSize: '1.1rem', fontWeight: 700 }}>{m.team_b_odds_percent}%</span>
+                        </button>
+                      </div>
+                    </div>
+                  )})}
+                </div>
               </div>
-            </div>
-          )})}
-          
-          {matches.length === 0 && !loading && (
-            <div style={{ gridColumn: '1 / -1', padding: '3rem', textAlign: 'center', border: '1px dashed var(--border-light)', borderRadius: 'var(--radius-md)' }}>
-              <h3>No active markets</h3>
-              <p className="text-muted">Wait for an admin to create new matches.</p>
-            </div>
-          )}
+            );
+          })}
         </div>
       )}
 
