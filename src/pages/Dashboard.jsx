@@ -71,11 +71,6 @@ export default function Dashboard() {
       });
       if (predError) throw predError;
 
-      const { error: balError } = await supabase.from('profiles').update({
-        balance: Number(profile.balance) - amount
-      }).eq('id', session.user.id);
-      if (balError) throw balError;
-
       alert("Prediction placed!");
       window.location.reload(); 
     } catch (err) {
@@ -108,23 +103,18 @@ export default function Dashboard() {
 
             return (
             <div className="market-card" key={m.id} style={{ opacity: isExpired ? 0.7 : 1 }}>
-              <div className="market-header">
+              <div className="market-header" style={{ justifyContent: 'space-between' }}>
                 <div className="market-icon">{icon}</div>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                  <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>
-                    {m.title}
+                {m.end_date && (
+                  <div style={{ fontSize: '0.75rem', color: isExpired ? 'var(--accent-no)' : 'var(--text-muted)' }}>
+                     {isExpired ? 'Market Closed' : `Ends: ${new Date(m.end_date).toLocaleDateString()}`}
                   </div>
-                  {m.end_date && (
-                    <div style={{ fontSize: '0.75rem', color: isExpired ? 'var(--accent-no)' : 'var(--text-muted)' }}>
-                       {isExpired ? 'Market Closed' : `Ends: ${new Date(m.end_date).toLocaleDateString()}`}
-                    </div>
-                  )}
-                </div>
+                )}
               </div>
 
               <div className="market-title">
-                Which side will win? <br/>
-                <span className="text-muted" style={{ fontWeight: 400 }}>{m.team_a} vs {m.team_b}</span>
+                <div style={{ fontSize: '1.15rem', color: 'var(--text-main)', marginBottom: '0.4rem' }}>{m.title}</div>
+                <div className="text-muted" style={{ fontWeight: 400, fontSize: '0.9rem' }}>{m.team_a} vs {m.team_b}</div>
               </div>
 
               <div className="flex gap-2" style={{ marginTop: 'auto' }}>
