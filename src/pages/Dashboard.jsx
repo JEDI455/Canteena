@@ -198,7 +198,17 @@ export default function Dashboard() {
                 <label className="form-label">Wager Amount ($)</label>
                 <input 
                   type="number" className="form-input" min="1" max={profile?.balance || 0} step="0.01" required
-                  value={wagerAmount} onChange={e => setWagerAmount(e.target.value)}
+                  value={wagerAmount} 
+                  onKeyDown={e => {
+                    if (e.key === '-' || e.key === 'e' || e.key === 'E' || e.key === '+') {
+                      e.preventDefault();
+                    }
+                  }}
+                  onChange={e => {
+                    const val = e.target.value;
+                    if (Number(val) < 0) return;
+                    setWagerAmount(val);
+                  }}
                   autoFocus
                 />
               </div>
