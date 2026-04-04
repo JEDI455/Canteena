@@ -129,7 +129,7 @@ export default function Profile() {
         </div>
         <div style={{ textAlign: 'right' }}>
           <p className="text-muted" style={{ margin: 0, textTransform: 'uppercase', letterSpacing: '1px', fontSize: '0.8rem' }}>Current Balance</p>
-          <h2 className="text-accent" style={{ margin: 0, fontSize: '3rem', fontWeight: 800 }}>${profile?.balance || 0}</h2>
+          <h2 className="text-accent" style={{ margin: 0, fontSize: '3rem', fontWeight: 800 }}>${Number(profile?.balance || 0).toFixed(2)}</h2>
           {profile?.balance <= 0 && (
             <button className="btn btn-primary" style={{ marginTop: '0.5rem' }} onClick={handleClaimFunds}>Claim Refill ($100)</button>
           )}
@@ -229,11 +229,17 @@ export default function Profile() {
                 <tr key={p.id}>
                   <td className="font-semibold">{p.matches?.title || 'Unknown Match'}</td>
                   <td>{p.predicted_team}</td>
-                  <td>${p.wager_amount}</td>
-                  <td className="text-accent">${p.expected_payout}</td>
+                  <td>${Number(p.wager_amount).toFixed(2)}</td>
+                  <td className="text-accent">${Number(p.expected_payout).toFixed(2)}</td>
                   <td>
-                    <span className={`badge ${p.status === 'pending' ? 'badge-open' : p.status === 'won' ? 'badge-resolved' : ''}`}
-                          style={p.status === 'lost' ? {backgroundColor: 'rgba(239, 68, 68, 0.1)', color: 'var(--accent-no)'} : {}}>
+                    <span 
+                      className="badge" 
+                      style={{
+                        backgroundColor: p.status === 'pending' ? 'rgba(100, 116, 139, 0.2)' : p.status === 'won' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+                        color: p.status === 'pending' ? '#94a3b8' : p.status === 'won' ? 'var(--accent-yes)' : 'var(--accent-no)',
+                        border: `1px solid ${p.status === 'pending' ? '#475569' : p.status === 'won' ? 'rgba(34, 197, 94, 0.5)' : 'rgba(239, 68, 68, 0.5)'}`
+                      }}
+                    >
                       {p.status}
                     </span>
                   </td>
@@ -269,7 +275,7 @@ export default function Profile() {
                       <span style={{ textTransform: 'capitalize' }}>{t.type.replace('_', ' ')}</span>
                     </td>
                     <td className="font-bold" style={{ color: Number(t.amount) > 0 ? 'var(--accent-yes)' : 'var(--accent-no)' }}>
-                      {Number(t.amount) > 0 ? '+' : ''}{t.amount}
+                      {Number(t.amount) > 0 ? '+' : ''}{Number(t.amount).toFixed(2)}
                     </td>
                     <td className="text-muted">{t.description || '-'}</td>
                     <td className="text-muted text-sm">{new Date(t.created_at).toLocaleString()}</td>

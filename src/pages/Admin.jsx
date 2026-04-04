@@ -4,6 +4,7 @@ import { supabase } from '../supabaseClient';
 export default function Admin() {
   const [profiles, setProfiles] = useState([]);
   const [matches, setMatches] = useState([]);
+  const [predictions, setPredictions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -43,6 +44,15 @@ export default function Admin() {
 
       if (matsError) throw matsError;
       setMatches(mats || []);
+
+      // Fetch Predictions
+      const { data: preds, error: predsError } = await supabase
+        .from('predictions')
+        .select('*, profiles(email), matches(title)')
+        .order('created_at', { ascending: false });
+        
+      if (predsError) console.error(predsError);
+      setPredictions(preds || []);
 
     } catch (err) {
       console.error(err);
@@ -286,6 +296,52 @@ export default function Admin() {
         </table>
       </div>
 
+      {/* PREDICTIONS SECTION */}
+      <h2 style={{ borderBottom: '1px solid var(--border-light)', paddingBottom: '0.5rem', marginTop: '2rem' }}>All User Predictions</h2>
+      <div style={{ overflowX: 'auto', marginBottom: '3rem' }}>
+        <table className="data-table">
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Match</th>
+              <th>Prediction</th>
+              <th>Wager / Payout</th>
+              <th>Status</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {predictions.map(p => (
+              <tr key={p.id}>
+                <td>{p.profiles?.email || 'Unknown User'}</td>
+                <td className="font-semibold">{p.matches?.title || 'Unknown Match'}</td>
+                <td>{p.predicted_team}</td>
+                <td>
+                  <span className="text-muted">${Number(p.wager_amount).toFixed(2)}</span> / <span className="text-accent">${Number(p.expected_payout).toFixed(2)}</span>
+                </td>
+                <td>
+                  <span 
+                    className="badge" 
+                    style={{
+                      backgroundColor: p.status === 'pending' ? 'rgba(100, 116, 139, 0.2)' : p.status === 'won' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+                      color: p.status === 'pending' ? '#94a3b8' : p.status === 'won' ? 'var(--accent-yes)' : 'var(--accent-no)',
+                      border: `1px solid ${p.status === 'pending' ? '#475569' : p.status === 'won' ? 'rgba(34, 197, 94, 0.5)' : 'rgba(239, 68, 68, 0.5)'}`,
+                      textTransform: 'capitalize'
+                    }}
+                  >
+                    {p.status}
+                  </span>
+                </td>
+                <td className="text-muted text-xs">{new Date(p.created_at).toLocaleString()}</td>
+              </tr>
+            ))}
+            {predictions.length === 0 && (
+              <tr><td colSpan="6" style={{ textAlign: 'center', color: 'var(--text-muted)' }}>No predictions available</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
       {/* USERS SECTION */}
       <h2 style={{ borderBottom: '1px solid var(--border-light)', paddingBottom: '0.5rem' }}>Manage Users</h2>
       <div style={{ overflowX: 'auto' }}>
@@ -303,7 +359,7 @@ export default function Admin() {
               <tr key={p.id}>
                 <td>{p.email}</td>
                 <td>{p.role}</td>
-                <td className="font-semibold text-accent">${p.balance}</td>
+                <td className="font-semibold text-accent">${Number(p.balance).toFixed(2)}</td>
                 <td>
                   <button className="btn btn-outline text-xs" onClick={() => handleAddFunds(p.id, p.balance)}>+ Add Funds</button>
                 </td>

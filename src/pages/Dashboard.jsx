@@ -162,7 +162,7 @@ export default function Dashboard() {
             <h3 style={{ marginTop: 0 }}>Predict: {betState.teamName}</h3>
             <p className="text-muted" style={{ marginBottom: '1.5rem' }}>
               Current Odds: <span className="font-bold text-main">{betState.odds}%</span><br/>
-              Your Balance: <span className="font-bold text-accent">${profile?.balance || 0}</span>
+              Your Balance: <span className="font-bold text-accent">${Number(profile?.balance || 0).toFixed(2)}</span>
             </p>
             
             <form onSubmit={handleBetSubmit} className="flex flex-col gap-4">
