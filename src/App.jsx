@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import Admin from './pages/Admin';
 import Leaderboard from './pages/Leaderboard';
+import Profile from './pages/Profile';
 
 // Layout wrapper to inject the nav bar and pass session down
 function Layout({ session, profile, handleLogout }) {
@@ -27,11 +28,12 @@ function Layout({ session, profile, handleLogout }) {
                 )}
                 
                 <div className="flex items-center gap-4 border-l pl-4" style={{ borderLeft: '1px solid var(--border-light)', paddingLeft: '1.5rem', marginLeft: '0.5rem' }}>
-                  <div className="text-sm">
-                    <span className="text-muted" style={{ marginRight: '1rem', fontSize: '0.85rem' }}>{session.user.email}</span>
-                    <span className="text-muted">Balance: </span>
-                    <span className="font-bold text-accent">${profile?.balance || '0'}</span>
-                  </div>
+                  <Link to="/profile" className="flex items-center gap-3 text-sm" style={{ textDecoration: 'none', transition: 'opacity 0.2s ease', cursor: 'pointer' }} onMouseEnter={(e) => e.currentTarget.style.opacity = '0.8'} onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}>
+                    <span className="text-muted">{session.user.email}</span>
+                    <div style={{ background: 'rgba(56, 189, 248, 0.1)', padding: '0.2rem 0.6rem', borderRadius: 'var(--radius-sm)' }}>
+                      <span className="font-bold text-accent">${profile?.balance || '0'}</span>
+                    </div>
+                  </Link>
                   <button onClick={handleLogout} className="btn btn-outline text-xs" style={{ padding: '0.4rem 0.75rem' }}>Log Out</button>
                 </div>
               </>
@@ -105,6 +107,7 @@ function App() {
       <Route element={<Layout session={session} profile={profile} handleLogout={handleLogout} />}>
         <Route path="/" element={<Dashboard />} />
         <Route path="/leaderboard" element={<Leaderboard />} />
+        <Route path="/profile" element={<Profile />} />
         <Route path="/login" element={session ? <Navigate to="/" /> : <Login />} />
         <Route path="/admin" element={
           session && profile?.role === 'admin' ? <Admin /> : <Navigate to="/" />

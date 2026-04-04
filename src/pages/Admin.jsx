@@ -100,6 +100,15 @@ export default function Admin() {
         .eq('id', profileId);
         
       if (error) throw error;
+
+      // Log transaction
+      await supabase.from('transactions').insert([{
+        user_id: profileId,
+        amount: amount,
+        type: 'admin_adjustment',
+        description: 'Admin added funds manually'
+      }]);
+
       fetchData();
     } catch (err) {
       alert('Error adding funds: ' + err.message);
@@ -140,6 +149,14 @@ export default function Admin() {
               await supabase.from('profiles').update({
                 balance: Number(userProfile.balance) + Number(p.expected_payout)
               }).eq('id', p.user_id);
+              
+              // Log payout transaction
+              await supabase.from('transactions').insert([{
+                user_id: p.user_id,
+                amount: Number(p.expected_payout),
+                type: 'payout',
+                description: `Payout for winning bet`
+              }]);
             }
           }
         }
