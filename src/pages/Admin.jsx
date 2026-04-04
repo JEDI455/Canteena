@@ -268,8 +268,8 @@ export default function Admin() {
                 <td>
                   {m.status === 'open' && (
                     <div className="flex gap-2">
-                      <button className="btn btn-outline text-xs" onClick={() => handleResolveMatch(m.id, 'team_a')}>A Won</button>
-                      <button className="btn btn-outline text-xs" onClick={() => handleResolveMatch(m.id, 'team_b')}>B Won</button>
+                      <button className="btn btn-outline text-xs" onClick={() => handleResolveMatch(m.id, 'team_a')}>{m.team_a} Won</button>
+                      <button className="btn btn-outline text-xs" onClick={() => handleResolveMatch(m.id, 'team_b')}>{m.team_b} Won</button>
                     </div>
                   )}
                   {m.status === 'resolved' && (
