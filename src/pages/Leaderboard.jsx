@@ -62,7 +62,10 @@ export default function Leaderboard() {
       }
 
       userPreds.forEach(p => {
-        totalWagered += Number(p.wager_amount);
+        if (p.status !== 'pending') {
+          totalWagered += Number(p.wager_amount);
+        }
+        
         if (p.status === 'won') {
           wins++;
           profit += (Number(p.expected_payout) - Number(p.wager_amount));

@@ -58,9 +58,13 @@ export default function Profile() {
     ? ((wonBets / (wonBets + lostBets)) * 100).toFixed(1) 
     : 0;
 
+  const resolvedPredictions = predictions.filter(p => p.status !== 'pending');
+  const totalWageredResolved = resolvedPredictions.reduce((sum, p) => sum + Number(p.wager_amount), 0);
+  const totalWon = resolvedPredictions.filter(p => p.status === 'won').reduce((sum, p) => sum + Number(p.expected_payout), 0);
+  const netProfit = totalWon - totalWageredResolved;
+  
+  // Total wagered including active could still be shown, but for profit we use resolved only.
   const totalWagered = predictions.reduce((sum, p) => sum + Number(p.wager_amount), 0);
-  const totalWon = predictions.filter(p => p.status === 'won').reduce((sum, p) => sum + Number(p.expected_payout), 0);
-  const netProfit = totalWon - totalWagered;
 
   // Compute balance history data for chart
   // Start from initial +100 bonus, or replay transactions from oldest to newest
