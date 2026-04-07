@@ -183,7 +183,7 @@ export default function Profile() {
                 itemStyle={{ color: 'var(--text-main)' }}
                 formatter={(value) => [`${value < 0 ? '-' : ''}$${Math.abs(value).toFixed(2)}`, 'Profit']}
               />
-              <Line type="monotone" dataKey="profit" stroke="var(--accent-main)" strokeWidth={3} dot={false} />
+              <Line type="stepAfter" dataKey="profit" stroke="var(--accent-main)" strokeWidth={3} dot={false} />
             </LineChart>
           </ResponsiveContainer>
         </div>
