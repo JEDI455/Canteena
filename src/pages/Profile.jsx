@@ -65,19 +65,26 @@ export default function Profile() {
   
   // Total wagered including active could still be shown, but for profit we use resolved only.
   const totalWagered = predictions.reduce((sum, p) => sum + Number(p.wager_amount), 0);
+  const totalPendingFunds = predictions.filter(p => p.status === 'pending').reduce((sum, p) => sum + Number(p.wager_amount), 0);
 
-  // Compute balance history data for chart
-  // Start from initial +100 bonus, or replay transactions from oldest to newest
-  let runningBalance = 0;
-  const chartData = [...transactions].reverse().map(t => {
-    runningBalance += Number(t.amount);
+  // Compute profit history data for chart
+  let runningProfit = 0;
+  const profitValidPreds = [...predictions]
+    .filter(p => p.status !== 'pending')
+    .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+
+  const chartData = [{ date: 'Start', profit: 0 }, ...profitValidPreds.map(p => {
+    const wager = Number(p.wager_amount);
+    if (p.status === 'won') {
+      runningProfit += (Number(p.expected_payout) - wager);
+    } else if (p.status === 'lost') {
+      runningProfit -= wager;
+    }
     return {
-      date: new Date(t.created_at).toLocaleDateString(),
-      balance: runningBalance,
-      amount: Number(t.amount),
-      type: t.type
+      date: new Date(p.created_at).toLocaleDateString(),
+      profit: runningProfit
     };
-  });
+  })];
 
   const handleClaimFunds = async () => {
     if (!profile) return;
@@ -151,6 +158,10 @@ export default function Profile() {
           <h3 style={{ margin: 0, fontSize: '2rem' }}>${totalWagered.toFixed(2)}</h3>
         </div>
         <div className="market-card" style={{ textAlign: 'center', padding: '1.5rem' }}>
+          <p className="text-muted" style={{ fontSize: '0.9rem', marginBottom: '0.5rem' }}>Pending Funds</p>
+          <h3 style={{ margin: 0, fontSize: '2rem' }}>${totalPendingFunds.toFixed(2)}</h3>
+        </div>
+        <div className="market-card" style={{ textAlign: 'center', padding: '1.5rem' }}>
           <p className="text-muted" style={{ fontSize: '0.9rem', marginBottom: '0.5rem' }}>Net Profit</p>
           <h3 style={{ margin: 0, fontSize: '2rem', color: netProfit >= 0 ? 'var(--accent-yes)' : 'var(--accent-no)' }}>
             {netProfit >= 0 ? '+' : ''}${netProfit.toFixed(2)}
@@ -159,9 +170,9 @@ export default function Profile() {
       </div>
 
       {/* CHART OVERVIEW */}
-      {transactions.length > 0 && (
+      {chartData.length > 1 && (
         <div className="market-card" style={{ marginBottom: '2rem', height: '300px' }}>
-          <h3 style={{ marginBottom: '1rem' }}>Balance History</h3>
+          <h3 style={{ marginBottom: '1rem' }}>Profit History</h3>
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
@@ -170,9 +181,9 @@ export default function Profile() {
               <Tooltip 
                 contentStyle={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-light)', borderRadius: 'var(--radius-sm)' }}
                 itemStyle={{ color: 'var(--text-main)' }}
-                formatter={(value) => [`$${value}`, 'Balance']}
+                formatter={(value) => [`${value < 0 ? '-' : ''}$${Math.abs(value).toFixed(2)}`, 'Profit']}
               />
-              <Line type="stepAfter" dataKey="balance" stroke="var(--accent-main)" strokeWidth={3} dot={false} />
+              <Line type="monotone" dataKey="profit" stroke="var(--accent-main)" strokeWidth={3} dot={false} />
             </LineChart>
           </ResponsiveContainer>
         </div>
