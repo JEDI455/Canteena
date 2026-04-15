@@ -60,6 +60,21 @@ export default function Dashboard() {
 
     setIsSubmitting(true);
     try {
+      // FE Failsafe: Check match status right before betting
+      const { data: matchData, error: matchError } = await supabase
+        .from('matches')
+        .select('status')
+        .eq('id', betState.matchId)
+        .single();
+        
+      if (matchError) throw matchError;
+      if (matchData.status !== 'open') {
+        alert("Market is closed or currently being resolved. Bet cancelled.");
+        setIsSubmitting(false);
+        setBetState(null);
+        return;
+      }
+
       const payout = amount / (betState.odds / 100);
       
       const { error: predError } = await supabase.from('predictions').insert({

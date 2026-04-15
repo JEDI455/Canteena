@@ -8,6 +8,13 @@ export default function Admin() {
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
 
+  // Pagination states
+  const [matchPage, setMatchPage] = useState(1);
+  const matchesPerPage = 10;
+  
+  const [predPage, setPredPage] = useState(1);
+  const predsPerPage = 15;
+
   // New Match Form State
   const [newMatch, setNewMatch] = useState({
     title: '',
@@ -178,6 +185,50 @@ export default function Admin() {
     }
   };
 
+  const handleRefundBet = async (predictionId, userId, wagerAmount) => {
+    if (!confirm(`Are you sure you want to refund this bet ($${wagerAmount})?`)) return;
+
+    try {
+      // 1. Update prediction status
+      const { error: predError } = await supabase
+        .from('predictions')
+        .update({ status: 'refunded' })
+        .eq('id', predictionId);
+      if (predError) throw predError;
+
+      // 2. Add balance back to user
+      const { data: userProfile, error: profileError } = await supabase
+        .from('profiles')
+        .select('balance')
+        .eq('id', userId)
+        .single();
+      if (profileError) throw profileError;
+
+      await supabase.from('profiles').update({
+        balance: Number(userProfile.balance) + Number(wagerAmount)
+      }).eq('id', userId);
+
+      // 3. Log transaction
+      await supabase.from('transactions').insert([{
+        user_id: userId,
+        amount: Number(wagerAmount),
+        type: 'refund',
+        description: 'Admin refunded bet'
+      }]);
+
+      fetchData();
+    } catch (err) {
+      alert('Error refunding bet: ' + err.message);
+    }
+  };
+
+  // Pagination logic
+  const currentMatches = matches.slice((matchPage - 1) * matchesPerPage, matchPage * matchesPerPage);
+  const totalMatchPages = Math.ceil(matches.length / matchesPerPage);
+
+  const currentPredictions = predictions.slice((predPage - 1) * predsPerPage, predPage * predsPerPage);
+  const totalPredPages = Math.ceil(predictions.length / predsPerPage);
+
   if (loading) return <div className="container" style={{ paddingTop: '2rem' }}>Loading Admin Panel...</div>;
 
   return (
@@ -253,7 +304,7 @@ export default function Admin() {
             </tr>
           </thead>
           <tbody>
-            {matches.map(m => {
+            {currentMatches.map(m => {
               const isExpired = m.status === 'open' && new Date(m.end_date) < new Date();
               return (
               <tr key={m.id} style={{ backgroundColor: isExpired ? 'rgba(239, 68, 68, 0.1)' : 'transparent' }}>
@@ -296,6 +347,14 @@ export default function Admin() {
         </table>
       </div>
 
+      {totalMatchPages > 1 && (
+        <div className="flex" style={{ justifyContent: 'center', gap: '1rem', marginBottom: '3rem', marginTop: '-2rem' }}>
+          <button className="btn btn-outline" disabled={matchPage === 1} onClick={() => setMatchPage(p => p - 1)}>Previous</button>
+          <span style={{ alignSelf: 'center', color: 'var(--text-muted)', fontSize: '0.9rem' }}>Page {matchPage} of {totalMatchPages}</span>
+          <button className="btn btn-outline" disabled={matchPage === totalMatchPages} onClick={() => setMatchPage(p => p + 1)}>Next</button>
+        </div>
+      )}
+
       {/* PREDICTIONS SECTION */}
       <h2 style={{ borderBottom: '1px solid var(--border-light)', paddingBottom: '0.5rem', marginTop: '2rem' }}>All User Predictions</h2>
       <div style={{ overflowX: 'auto', marginBottom: '3rem' }}>
@@ -308,10 +367,11 @@ export default function Admin() {
               <th>Wager / Payout</th>
               <th>Status</th>
               <th>Date</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            {predictions.map(p => (
+            {currentPredictions.map(p => (
               <tr key={p.id}>
                 <td>{p.profiles?.email || 'Unknown User'}</td>
                 <td className="font-semibold">{p.matches?.title || 'Unknown Match'}</td>
@@ -333,14 +393,27 @@ export default function Admin() {
                   </span>
                 </td>
                 <td className="text-muted text-xs">{new Date(p.created_at).toLocaleString()}</td>
+                <td>
+                  {p.status !== 'refunded' && p.status !== 'won' && p.status !== 'lost' && (
+                    <button className="btn btn-outline text-xs" style={{ borderColor: 'var(--accent-no)', color: 'var(--accent-no)' }} onClick={() => handleRefundBet(p.id, p.user_id, p.wager_amount)}>Refund</button>
+                  )}
+                </td>
               </tr>
             ))}
             {predictions.length === 0 && (
-              <tr><td colSpan="6" style={{ textAlign: 'center', color: 'var(--text-muted)' }}>No predictions available</td></tr>
+              <tr><td colSpan="7" style={{ textAlign: 'center', color: 'var(--text-muted)' }}>No predictions available</td></tr>
             )}
           </tbody>
         </table>
       </div>
+
+      {totalPredPages > 1 && (
+        <div className="flex" style={{ justifyContent: 'center', gap: '1rem', marginBottom: '3rem', marginTop: '-2rem' }}>
+          <button className="btn btn-outline" disabled={predPage === 1} onClick={() => setPredPage(p => p - 1)}>Previous</button>
+          <span style={{ alignSelf: 'center', color: 'var(--text-muted)', fontSize: '0.9rem' }}>Page {predPage} of {totalPredPages}</span>
+          <button className="btn btn-outline" disabled={predPage === totalPredPages} onClick={() => setPredPage(p => p + 1)}>Next</button>
+        </div>
+      )}
 
       {/* USERS SECTION */}
       <h2 style={{ borderBottom: '1px solid var(--border-light)', paddingBottom: '0.5rem' }}>Manage Users</h2>
