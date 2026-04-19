@@ -11,7 +11,7 @@ export default function Admin() {
   // Pagination states
   const [matchPage, setMatchPage] = useState(1);
   const matchesPerPage = 10;
-  
+
   const [predPage, setPredPage] = useState(1);
   const predsPerPage = 15;
 
@@ -39,7 +39,7 @@ export default function Admin() {
         .from('profiles')
         .select('*')
         .order('created_at', { ascending: false });
-      
+
       if (profsError) throw profsError;
       setProfiles(profs || []);
 
@@ -57,7 +57,7 @@ export default function Admin() {
         .from('predictions')
         .select('*, profiles(email), matches(title)')
         .order('created_at', { ascending: false });
-        
+
       if (predsError) console.error(predsError);
       setPredictions(preds || []);
 
@@ -75,7 +75,7 @@ export default function Admin() {
       alert('Odds must sum to 100%');
       return;
     }
-    
+
     if (!newMatch.endDate) {
       alert('Please select an end date.');
       return;
@@ -89,6 +89,8 @@ export default function Admin() {
           team_b: newMatch.teamB,
           team_a_odds_percent: newMatch.teamAOdds,
           team_b_odds_percent: newMatch.teamBOdds,
+          initial_a_odds_percent: newMatch.teamAOdds,
+          initial_b_odds_percent: newMatch.teamBOdds,
           status: 'open',
           category: newMatch.category,
           end_date: new Date(newMatch.endDate).toISOString()
@@ -106,7 +108,7 @@ export default function Admin() {
   const handleAddFunds = async (profileId, currentBalance) => {
     const amountStr = prompt('Enter amount to add:');
     if (!amountStr) return;
-    
+
     const amount = Number(amountStr);
     if (isNaN(amount) || amount <= 0) return alert('Invalid amount');
 
@@ -115,7 +117,7 @@ export default function Admin() {
         .from('profiles')
         .update({ balance: Number(currentBalance) + amount })
         .eq('id', profileId);
-        
+
       if (error) throw error;
 
       // Log transaction
@@ -155,7 +157,7 @@ export default function Admin() {
       if (predictions && predictions.length > 0) {
         for (const p of predictions) {
           const isWinner = p.predicted_team === winner;
-          
+
           await supabase.from('predictions').update({
             status: isWinner ? 'won' : 'lost'
           }).eq('id', p.id);
@@ -166,7 +168,7 @@ export default function Admin() {
               await supabase.from('profiles').update({
                 balance: Number(userProfile.balance) + Number(p.expected_payout)
               }).eq('id', p.user_id);
-              
+
               // Log payout transaction
               await supabase.from('transactions').insert([{
                 user_id: p.user_id,
@@ -242,41 +244,41 @@ export default function Admin() {
 
       {/* MATCHES SECTION */}
       <h2 style={{ borderBottom: '1px solid var(--border-light)', paddingBottom: '0.5rem', marginTop: '2rem' }}>Manage Matches</h2>
-      
+
       <div className="market-card" style={{ marginBottom: '2rem' }}>
         <h3 className="font-semibold" style={{ marginBottom: '1rem' }}>Create New Match</h3>
         <form onSubmit={handleCreateMatch} className="flex flex-col gap-4">
           <div className="form-group">
             <label className="form-label">Match Title (e.g. IEM Katowice Final)</label>
-            <input type="text" className="form-input" required value={newMatch.title} onChange={e => setNewMatch({...newMatch, title: e.target.value})} />
+            <input type="text" className="form-input" required value={newMatch.title} onChange={e => setNewMatch({ ...newMatch, title: e.target.value })} />
           </div>
-          
+
           <div className="flex gap-4" style={{ alignItems: 'flex-end' }}>
             <div className="form-group" style={{ flex: 1, marginBottom: 0 }}>
               <label className="form-label">Team A Name</label>
-              <input type="text" className="form-input" required value={newMatch.teamA} onChange={e => setNewMatch({...newMatch, teamA: e.target.value})} />
+              <input type="text" className="form-input" required value={newMatch.teamA} onChange={e => setNewMatch({ ...newMatch, teamA: e.target.value })} />
             </div>
             <div className="form-group" style={{ width: '100px', marginBottom: 0 }}>
               <label className="form-label">Odds (%)</label>
-              <input type="number" min="1" max="99" className="form-input" required value={newMatch.teamAOdds} onChange={e => setNewMatch({...newMatch, teamAOdds: Number(e.target.value)})} />
+              <input type="number" min="1" max="99" className="form-input" required value={newMatch.teamAOdds} onChange={e => setNewMatch({ ...newMatch, teamAOdds: Number(e.target.value) })} />
             </div>
           </div>
 
           <div className="flex gap-4" style={{ alignItems: 'flex-end', marginTop: '0.5rem' }}>
             <div className="form-group" style={{ flex: 1, marginBottom: 0 }}>
               <label className="form-label">Team B Name</label>
-              <input type="text" className="form-input" required value={newMatch.teamB} onChange={e => setNewMatch({...newMatch, teamB: e.target.value})} />
+              <input type="text" className="form-input" required value={newMatch.teamB} onChange={e => setNewMatch({ ...newMatch, teamB: e.target.value })} />
             </div>
             <div className="form-group" style={{ width: '100px', marginBottom: 0 }}>
               <label className="form-label">Odds (%)</label>
-              <input type="number" min="1" max="99" className="form-input" required value={newMatch.teamBOdds} onChange={e => setNewMatch({...newMatch, teamBOdds: Number(e.target.value)})} />
+              <input type="number" min="1" max="99" className="form-input" required value={newMatch.teamBOdds} onChange={e => setNewMatch({ ...newMatch, teamBOdds: Number(e.target.value) })} />
             </div>
           </div>
 
           <div className="flex gap-4" style={{ alignItems: 'flex-end', marginTop: '0.5rem' }}>
             <div className="form-group" style={{ flex: 1, marginBottom: 0 }}>
               <label className="form-label">Category</label>
-              <select className="form-input" value={newMatch.category} onChange={e => setNewMatch({...newMatch, category: e.target.value})}>
+              <select className="form-input" value={newMatch.category} onChange={e => setNewMatch({ ...newMatch, category: e.target.value })}>
                 <option value="politics">Politics</option>
                 <option value="economics">Economics</option>
                 <option value="sport">Sport</option>
@@ -285,10 +287,10 @@ export default function Admin() {
             </div>
             <div className="form-group" style={{ flex: 1, marginBottom: 0 }}>
               <label className="form-label">End Date & Time</label>
-              <input type="datetime-local" className="form-input" required value={newMatch.endDate} onChange={e => setNewMatch({...newMatch, endDate: e.target.value})} />
+              <input type="datetime-local" className="form-input" required value={newMatch.endDate} onChange={e => setNewMatch({ ...newMatch, endDate: e.target.value })} />
             </div>
           </div>
-          
+
           <button type="submit" className="btn btn-primary" style={{ alignSelf: 'flex-start', marginTop: '0.5rem' }}>Create Match</button>
         </form>
       </div>
@@ -307,37 +309,37 @@ export default function Admin() {
             {currentMatches.map(m => {
               const isExpired = m.status === 'open' && new Date(m.end_date) < new Date();
               return (
-              <tr key={m.id} style={{ backgroundColor: isExpired ? 'rgba(239, 68, 68, 0.1)' : 'transparent' }}>
-                <td>
-                  <div className="font-semibold">{m.title}</div>
-                  <div className="text-muted text-xs" style={{ textTransform: 'capitalize' }}>{m.category}</div>
-                </td>
-                <td>
-                  <span className="text-muted">{m.team_a}</span> <span className="text-accent">{m.team_a_odds_percent}%</span> <br/>
-                  <span className="text-muted">{m.team_b}</span> <span className="text-accent">{m.team_b_odds_percent}%</span>
-                </td>
-                <td>
-                  <div style={{ marginBottom: '0.25rem' }}>
-                    <span className={`badge ${m.status === 'open' ? 'badge-open' : 'badge-resolved'}`}>{m.status}</span>
-                  </div>
-                  {m.end_date && (
-                    <div className={isExpired ? 'text-no text-xs font-bold' : 'text-muted text-xs'}>
-                      {isExpired ? 'Expired: Needs Resolution' : `Ends: ${new Date(m.end_date).toLocaleDateString()}`}
+                <tr key={m.id} style={{ backgroundColor: isExpired ? 'rgba(239, 68, 68, 0.1)' : 'transparent' }}>
+                  <td>
+                    <div className="font-semibold">{m.title}</div>
+                    <div className="text-muted text-xs" style={{ textTransform: 'capitalize' }}>{m.category}</div>
+                  </td>
+                  <td>
+                    <span className="text-muted">{m.team_a}</span> <span className="text-accent">{m.team_a_odds_percent}%</span> <br />
+                    <span className="text-muted">{m.team_b}</span> <span className="text-accent">{m.team_b_odds_percent}%</span>
+                  </td>
+                  <td>
+                    <div style={{ marginBottom: '0.25rem' }}>
+                      <span className={`badge ${m.status === 'open' ? 'badge-open' : 'badge-resolved'}`}>{m.status}</span>
                     </div>
-                  )}
-                </td>
-                <td>
-                  {m.status === 'open' && (
-                    <div className="flex gap-2">
-                      <button className="btn btn-outline text-xs" onClick={() => handleResolveMatch(m.id, 'team_a')}>{m.team_a} Won</button>
-                      <button className="btn btn-outline text-xs" onClick={() => handleResolveMatch(m.id, 'team_b')}>{m.team_b} Won</button>
-                    </div>
-                  )}
-                  {m.status === 'resolved' && (
-                    <span className="text-muted">Winner: {m.winner === 'team_a' ? m.team_a : m.team_b}</span>
-                  )}
-                </td>
-              </tr>
+                    {m.end_date && (
+                      <div className={isExpired ? 'text-no text-xs font-bold' : 'text-muted text-xs'}>
+                        {isExpired ? 'Expired: Needs Resolution' : `Ends: ${new Date(m.end_date).toLocaleDateString()}`}
+                      </div>
+                    )}
+                  </td>
+                  <td>
+                    {m.status === 'open' && (
+                      <div className="flex gap-2">
+                        <button className="btn btn-outline text-xs" onClick={() => handleResolveMatch(m.id, 'team_a')}>{m.team_a} Won</button>
+                        <button className="btn btn-outline text-xs" onClick={() => handleResolveMatch(m.id, 'team_b')}>{m.team_b} Won</button>
+                      </div>
+                    )}
+                    {m.status === 'resolved' && (
+                      <span className="text-muted">Winner: {m.winner === 'team_a' ? m.team_a : m.team_b}</span>
+                    )}
+                  </td>
+                </tr>
               );
             })}
             {matches.length === 0 && (
@@ -380,8 +382,8 @@ export default function Admin() {
                   <span className="text-muted">${Number(p.wager_amount).toFixed(2)}</span> / <span className="text-accent">${Number(p.expected_payout).toFixed(2)}</span>
                 </td>
                 <td>
-                  <span 
-                    className="badge" 
+                  <span
+                    className="badge"
                     style={{
                       backgroundColor: p.status === 'pending' ? 'rgba(100, 116, 139, 0.2)' : p.status === 'won' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
                       color: p.status === 'pending' ? '#94a3b8' : p.status === 'won' ? 'var(--accent-yes)' : 'var(--accent-no)',
