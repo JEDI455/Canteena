@@ -11,6 +11,7 @@ export default function Admin() {
   // Pagination states
   const [matchPage, setMatchPage] = useState(1);
   const matchesPerPage = 10;
+  const [matchFilter, setMatchFilter] = useState('all'); // 'all', 'active', 'resolution', 'finished'
 
   const [predPage, setPredPage] = useState(1);
   const predsPerPage = 15;
@@ -225,8 +226,22 @@ export default function Admin() {
   };
 
   // Pagination logic
-  const currentMatches = matches.slice((matchPage - 1) * matchesPerPage, matchPage * matchesPerPage);
-  const totalMatchPages = Math.ceil(matches.length / matchesPerPage);
+  const now = new Date();
+  const processedMatches = matches.filter(m => {
+    const isExpired = m.status === 'open' && new Date(m.end_date) < now;
+    if (matchFilter === 'active') return m.status === 'open' && !isExpired;
+    if (matchFilter === 'resolution') return isExpired;
+    if (matchFilter === 'finished') return m.status === 'resolved';
+    return true;
+  }).sort((a, b) => {
+    const valA = (a.status === 'open' && new Date(a.end_date) < now) ? 1 : (a.status === 'open' ? 2 : 3);
+    const valB = (b.status === 'open' && new Date(b.end_date) < now) ? 1 : (b.status === 'open' ? 2 : 3);
+    if (valA !== valB) return valA - valB;
+    return new Date(b.created_at || 0) - new Date(a.created_at || 0);
+  });
+
+  const currentMatches = processedMatches.slice((matchPage - 1) * matchesPerPage, matchPage * matchesPerPage);
+  const totalMatchPages = Math.ceil(processedMatches.length / matchesPerPage);
 
   const currentPredictions = predictions.slice((predPage - 1) * predsPerPage, predPage * predsPerPage);
   const totalPredPages = Math.ceil(predictions.length / predsPerPage);
@@ -243,9 +258,9 @@ export default function Admin() {
       )}
 
       {/* MATCHES SECTION */}
-      <h2 style={{ borderBottom: '1px solid var(--border-light)', paddingBottom: '0.5rem', marginTop: '2rem' }}>Manage Matches</h2>
+      <h2 style={{ borderBottom: '1px solid var(--border-light)', paddingBottom: '0.5rem', marginTop: '2rem', marginBottom: '1.5rem' }}>Create New Match</h2>
 
-      <div className="market-card" style={{ marginBottom: '2rem' }}>
+      <div className="market-card" style={{ marginBottom: '3rem' }}>
         <h3 className="font-semibold" style={{ marginBottom: '1rem' }}>Create New Match</h3>
         <form onSubmit={handleCreateMatch} className="flex flex-col gap-4">
           <div className="form-group">
@@ -293,6 +308,16 @@ export default function Admin() {
 
           <button type="submit" className="btn btn-primary" style={{ alignSelf: 'flex-start', marginTop: '0.5rem' }}>Create Match</button>
         </form>
+      </div>
+
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-light)', paddingBottom: '0.5rem', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+        <h2 style={{ margin: 0, borderBottom: 'none', paddingBottom: 0, marginTop: 0 }}>Matches List</h2>
+        <div className="flex gap-2" style={{ flexWrap: 'wrap' }}>
+          <button className={`btn ${matchFilter === 'all' ? 'btn-primary' : 'btn-outline'}`} style={{ padding: '0.25rem 0.75rem', fontSize: '0.85rem' }} onClick={() => { setMatchFilter('all'); setMatchPage(1); }}>All</button>
+          <button className={`btn ${matchFilter === 'resolution' ? 'btn-primary' : 'btn-outline'}`} style={{ padding: '0.25rem 0.75rem', fontSize: '0.85rem' }} onClick={() => { setMatchFilter('resolution'); setMatchPage(1); }}>Requires Resolution</button>
+          <button className={`btn ${matchFilter === 'active' ? 'btn-primary' : 'btn-outline'}`} style={{ padding: '0.25rem 0.75rem', fontSize: '0.85rem' }} onClick={() => { setMatchFilter('active'); setMatchPage(1); }}>Active</button>
+          <button className={`btn ${matchFilter === 'finished' ? 'btn-primary' : 'btn-outline'}`} style={{ padding: '0.25rem 0.75rem', fontSize: '0.85rem' }} onClick={() => { setMatchFilter('finished'); setMatchPage(1); }}>Finished</button>
+        </div>
       </div>
 
       <div style={{ overflowX: 'auto', marginBottom: '3rem' }}>
