@@ -172,6 +172,7 @@ export default function Dashboard() {
                         >
                           <span style={{ fontSize: '0.8rem', opacity: 0.9 }}>{m.team_a}</span>
                           <span style={{ fontSize: '1.1rem', fontWeight: 700 }}>{Number(m.team_a_odds_percent).toFixed(2)}%</span>
+                          <span style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-muted)' }}>{Number(100 / m.team_a_odds_percent).toFixed(2)}x</span>
                           <span style={{ fontSize: '0.7rem', opacity: 0.7 }}>Wagered: ${Number(m.total_wager_a || 0).toFixed(2)}</span>
                         </button>
                         <button 
@@ -182,6 +183,7 @@ export default function Dashboard() {
                         >
                           <span style={{ fontSize: '0.8rem', opacity: 0.9 }}>{m.team_b}</span>
                           <span style={{ fontSize: '1.1rem', fontWeight: 700 }}>{Number(m.team_b_odds_percent).toFixed(2)}%</span>
+                          <span style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-muted)' }}>{Number(100 / m.team_b_odds_percent).toFixed(2)}x</span>
                           <span style={{ fontSize: '0.7rem', opacity: 0.7 }}>Wagered: ${Number(m.total_wager_b || 0).toFixed(2)}</span>
                         </button>
                       </div>
@@ -206,7 +208,7 @@ export default function Dashboard() {
           }}>
             <h3 style={{ marginTop: 0 }}>Predict: {betState.teamName}</h3>
             <p className="text-muted" style={{ marginBottom: '1.5rem' }}>
-              Current Odds: <span className="font-bold text-main">{Number(betState.odds).toFixed(2)}%</span><br/>
+              Current Odds: <span className="font-bold text-main">{Number(betState.odds).toFixed(2)}%</span> <span style={{ fontSize: '0.9em', fontWeight: 500 }}>{Number(100 / betState.odds).toFixed(2)}x</span><br/>
               Your Balance: <span className="font-bold text-accent">${Number(profile?.balance || 0).toFixed(2)}</span>
             </p>
             
