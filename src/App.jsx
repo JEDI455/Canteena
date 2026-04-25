@@ -6,6 +6,7 @@ import Login from './pages/Login';
 import Admin from './pages/Admin';
 import Leaderboard from './pages/Leaderboard';
 import Profile from './pages/Profile';
+import HouseStats from './pages/HouseStats';
 
 // Layout wrapper to inject the nav bar and pass session down
 function Layout({ session, profile, handleLogout }) {
@@ -24,7 +25,10 @@ function Layout({ session, profile, handleLogout }) {
             {session ? (
               <>
                 {profile?.role === 'admin' && (
-                  <Link to="/admin" className="nav-link" style={{ color: 'var(--accent-yes)' }}>Admin Panel</Link>
+                  <>
+                    <Link to="/admin" className="nav-link" style={{ color: 'var(--accent-yes)' }}>Admin Panel</Link>
+                    <Link to="/admin/stats" className="nav-link" style={{ color: 'var(--accent-yes)' }}>House Stats</Link>
+                  </>
                 )}
                 
                 <div className="flex items-center gap-4 border-l pl-4" style={{ borderLeft: '1px solid var(--border-light)', paddingLeft: '1.5rem', marginLeft: '0.5rem' }}>
@@ -111,6 +115,9 @@ function App() {
         <Route path="/login" element={session ? <Navigate to="/" /> : <Login />} />
         <Route path="/admin" element={
           session && profile?.role === 'admin' ? <Admin /> : <Navigate to="/" />
+        } />
+        <Route path="/admin/stats" element={
+          session && profile?.role === 'admin' ? <HouseStats /> : <Navigate to="/" />
         } />
       </Route>
     </Routes>
